@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Security Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .LOW {
+            color: green;
+        }
+        .MEDIUM {
+            color: orange;
+        }
+        .HIGH {
+            color: red;
+            font-weight: bold;
+        }
+        a {
+        text-decoration: none;
+        color: blue;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Security Alerts Dashboard</h2>
+
+<h3>Alert Severity Overview</h3>
+<canvas id="severityChart" width="400" height="150"></canvas>
+
+<h3>Users</h3>
+<table id="usersTable">
+    <thead>
+        <tr>
+            <th>User ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<hr>
+
+
+<table id="alertsTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>User ID</th>
+            <th>Current Risk Score</th>
+            <th>Severity</th>
+            <th>Message</th>
+            <th>Time</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+fetch("/api/admin/users")
+    .then(res => res.json())
+    .then(users => {
+        const tbody = document.querySelector("#usersTable tbody");
+
+        users.forEach(user => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td>
+                    <a href="/admin/user-profile/${user.id}">
+                        View Profile
+                    </a>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    });
+
+
+fetch("/api/admin/alerts")
+    .then(response => response.json())
+    .then(data => {
+        const tbody = document.querySelector("#alertsTable tbody");
+
+        let low = 0, medium = 0, high = 0;
+
+        data.forEach(alert => {
+            // Count severities
+            if (alert.severity === "LOW") low++;
+            else if (alert.severity === "MEDIUM") medium++;
+            else if (alert.severity === "HIGH") high++;
+
+            // Add table row
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${alert.id}</td>
+                <td>${alert.user_id}</td>
+                <td>${alert.risk_score}</td>
+                <td class="${alert.severity}">${alert.severity}</td>
+                <td>${alert.message}</td>
+                <td>${new Date(alert.created_at + "Z").toLocaleString("en-IN", {
+                    timeZone: "Asia/Kolkata"
+                })}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Create chart
+        const ctx = document.getElementById("severityChart").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["LOW", "MEDIUM", "HIGH"],
+                datasets: [{
+                    label: "Number of Alerts",
+                    data: [low, medium, high]
+                }]
+            }
+        });
+    });
+</script>
+
+
+</body>
+</html>

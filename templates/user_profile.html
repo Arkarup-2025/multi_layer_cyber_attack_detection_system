@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Risk Profile</title>
+    <style>
+        body { font-family: Arial; background: #f5f5f5; }
+        .box {
+            width: 700px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        .risk {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .HIGH { color: red; }
+        .MEDIUM { color: orange; }
+        .LOW { color: green; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 4px 0; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h3>User Risk Profile</h3>
+    <p id="userInfo"></p>
+    <p class="risk" id="riskScore"></p>
+
+    <h3>Recent Alerts</h3>
+    <ul id="alerts"></ul>
+
+    <h3>Recent Activity</h3>
+    <ul id="events"></ul>
+
+    <h3>Attack Timeline</h3>
+    <ul id="timeline"></ul>
+
+</div>
+
+<script>
+const userId = "{{ user_id }}";
+
+fetch(`/api/admin/user/${userId}`)
+.then(res => res.json())
+.then(data => {
+    // user info
+    document.getElementById("userInfo").innerText =
+        `User: ${data.user.username} (${data.user.email})`;
+    // risk score
+    document.getElementById("riskScore").innerText =
+        `Risk Score: ${data.risk_score}`;
+
+    // recent alerts
+    data.recent_alerts.forEach(a => {
+        const li = document.createElement("li");
+        li.innerText = `${a.severity} - ${a.message}`;
+        document.getElementById("alerts").appendChild(li);
+    });
+
+    // recent activity
+    data.recent_events.forEach(e => {
+        const li = document.createElement("li");
+        li.innerText = `${e.event_type} → ${e.resource}`;
+        document.getElementById("events").appendChild(li);
+    });
+});
+
+// Fetch attack timeline
+fetch(`/api/admin/user/${userId}/timeline`)
+.then(res => res.json())
+.then(events => {
+    const timeline = document.getElementById("timeline");
+
+    events.forEach(e => {
+        const li = document.createElement("li");
+
+        let icon = "ℹ️";
+        if (e.event_type.includes("FAILED")) icon = "❌";
+        if (e.event_type.includes("SECURITY")) icon = "🚨";
+        if (e.event_type.includes("API")) icon = "⚠️";
+        if (e.event_type.includes("CORRELATED")) icon = "🔥";
+
+        li.innerText = `${icon} ${e.event_type} — ${new Date(e.created_at + "Z")
+            .toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`;
+
+        timeline.appendChild(li);
+    });
+});
+
+</script>
+
+</body>
+</html>

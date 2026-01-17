@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Activity Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .box {
+            width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .danger {
+            background: #ffdddd;
+        }
+        .normal {
+            background: #ddffdd;
+        }
+        #msg {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h3>User Activity Simulation</h3>
+
+    <button class="normal" onclick="logAction('PAGE_ACCESS', '/dashboard')">
+        Normal Page Access
+    </button>
+
+    <button class="normal" onclick="logAction('API_CALL', '/api/data')">
+        Single API Call
+    </button>
+
+    <button class="danger" onclick="spamApi()">
+        Spam API (Simulate Attack)
+    </button>
+
+    <p id="msg"></p>
+</div>
+
+<script>
+const USER_ID = 1; // default test user
+
+function logAction(actionType, resource) {
+    fetch("/api/log-action", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user_id: USER_ID,
+            action_type: actionType,
+            resource: resource
+        })
+    })
+    .then(() => {
+        document.getElementById("msg").innerText = "Action logged";
+    });
+}
+
+function spamApi() {
+    document.getElementById("msg").innerText = "Spamming API...";
+
+    for (let i = 0; i < 12; i++) {
+        logAction("API_CALL", "/api/data");
+    }
+}
+</script>
+
+</body>
+</html>
